@@ -9,16 +9,16 @@ export const Register = () => {
 
   return (
     <Layout
-      title={t("account-creation-title")}
+      title={t("accountCreationTitle")}
       rightButton={
-        <Grid>
+        < Grid >
           <NavLink to="/auth/login">
             <Typography variant="button">{t("login")}</Typography>
           </NavLink>
-        </Grid>
+        </Grid >
       }
     >
       <RegisterForm />
-    </Layout>
+    </Layout >
   );
 };

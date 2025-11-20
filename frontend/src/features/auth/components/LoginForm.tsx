@@ -62,7 +62,7 @@ export const LoginForm = () => {
               color="primary"
               onClick={() => (window.location.href = '/forgot-password')}
             >
-              {t('forgot-password')}
+              {t('forgotPassword')}
             </Button>
           </Grid>
         </Grid>
