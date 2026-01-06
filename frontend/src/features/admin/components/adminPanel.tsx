@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { AdminCollapsibleTable } from './adminCollapsibleTable.tsx';
 
 // Function to download the CSV file
-const downloadCSV = (data: string) => {
+const downloadCSV = (data: string, name: string = "download") => {
   // Create a Blob with the CSV data and type
   const blob = new Blob([data], { type: 'text/csv' });
 
@@ -18,7 +18,7 @@ const downloadCSV = (data: string) => {
 
   // Set the URL and download attribute of the anchor tag
   a.href = url;
-  a.download = 'download.csv';
+  a.download = name + ".csv";
 
   // Trigger the download by clicking the anchor tag
   a.click();
@@ -34,8 +34,8 @@ const csvmaker = function (data: Object[]) {
 
   data.forEach(
     obj => {
-      const values = Object.values(obj).join(',');
-      csvRows.push(values)
+      const values = Object.values(obj).map((obj) => { return '"' + obj + '"' }).join(",");
+      csvRows.push(values);
     }
   )
 
@@ -82,7 +82,7 @@ export const AdminPanel = () => {
   }, [users]);
   return (
     <Grid sx={{ padding: 2 }}>
-      <Button onClick={() => downloadCSV(csvmaker(users))}>{t("downloadCSV")}</Button>
+      <Button onClick={() => downloadCSV(csvmaker(users), t("csvUsersData"))}>{t("downloadCSV")}</Button>
       <AdminCollapsibleTable
         columns={columns}
         rows={rows}
