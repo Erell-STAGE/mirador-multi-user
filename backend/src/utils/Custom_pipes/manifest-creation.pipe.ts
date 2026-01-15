@@ -22,6 +22,256 @@ import {
 import { generateAlphanumericSHA1Hash } from '../hashGenerator';
 import { serializeToValidUrl } from '../serializeToValideUrl';
 
+const fetchMediaForItem = async (media, id: string) => {
+  try {
+    const url = media.value.replace(
+      /^(http|https):\/\/localhost:\d+\//,
+      '$1://caddy/',
+    );
+
+    const timeStamp = Date.now();
+    const timeStamp2 = Date.now();
+    const timeStamp3 = Date.now();
+
+    let videoId: string | null = null;
+    let youtubeJson = null;
+    let peertubeVideoJson = null;
+
+    switch (true) {
+      case isVideo(url): {
+        const width = media.width;
+        const height = media.height;
+        const duration = Math.round(media.duration);
+        const mediaFormat = media.value.split('.').pop();
+        return {
+          id: `${id}${timeStamp}/canvas/${timeStamp2}`,
+          type: 'Canvas',
+          height,
+          width,
+          duration,
+          label: { en: ['Raw Item'] },
+          items: [
+            {
+              id: `${id}${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
+              type: 'AnnotationPage',
+              items: [
+                {
+                  id: `${id}${timeStamp}/annotation/${Date.now()}`,
+                  type: 'Annotation',
+                  motivation: 'painting',
+                  target: `${id}${timeStamp}/canvas/${timeStamp2}`,
+                  body: {
+                    id: media.value,
+                    type: 'Video',
+                    format: `Video/${mediaFormat}`,
+                    height,
+                    width,
+                    duration,
+                  },
+                },
+              ],
+            },
+          ],
+        };
+      }
+      case isYouTubeVideo(url): {
+        videoId = getYouTubeVideoID(url);
+        if (videoId) {
+          youtubeJson = await getYoutubeJson(url);
+          const videoDuration = await getVideoDuration(url);
+          let height: number;
+          let width: number;
+          if (youtubeJson.width >= youtubeJson.height) {
+            height = 1500;
+            width = (1500 * youtubeJson.width) / youtubeJson.height;
+          } else {
+            height = 1500;
+            width = (1500 * youtubeJson.height) / youtubeJson.width;
+          }
+          const duration = videoDuration;
+
+          return {
+            id: `${id}${timeStamp}/canvas/${timeStamp2}`,
+            type: 'Canvas',
+            height,
+            width,
+            duration,
+            label: { en: ['Youtube Item'] },
+            items: [
+              {
+                id: `${id}${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
+                type: 'AnnotationPage',
+                items: [
+                  {
+                    id: `${id}${timeStamp}/annotation/${Date.now()}`,
+                    type: 'Annotation',
+                    motivation: 'painting',
+                    target: `${id}${timeStamp}/canvas/${timeStamp2}`,
+                    body: {
+                      id: media.value,
+                      type: 'Video',
+                      format: `Video/MPG`,
+                      height,
+                      width,
+                      duration,
+                    },
+                  },
+                ],
+              },
+            ],
+          };
+        }
+      }
+      case await isPeerTubeVideo(url): {
+        videoId = getPeerTubeVideoID(url);
+        if (videoId) {
+          peertubeVideoJson = await getPeerTubeVideoDetails(url, videoId);
+
+          const defaultHeight = 480;
+          const defaultWidth = 854;
+
+          const height =
+            peertubeVideoJson.streamingPlaylists?.[0]?.files?.[0]?.height ||
+            defaultHeight;
+          const width =
+            peertubeVideoJson.streamingPlaylists?.[0]?.files?.[0]?.width ||
+            defaultWidth;
+
+          const duration = peertubeVideoJson.duration;
+          return {
+            id: `${id}${timeStamp}/canvas/${timeStamp2}`,
+            type: 'Canvas',
+            height,
+            width,
+            duration,
+            label: { en: ['Peertube Item'] },
+            items: [
+              {
+                id: `${id}${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
+                type: 'AnnotationPage',
+                items: [
+                  {
+                    id: `${id}${timeStamp}/annotation/${Date.now()}`,
+                    type: 'Annotation',
+                    motivation: 'painting',
+                    target: `${id}${timeStamp}/canvas/${timeStamp2}`,
+                    body: {
+                      id: media.value,
+                      type: 'Video',
+                      format: `Video/MPG`,
+                      height,
+                      width,
+                      duration,
+                    },
+                  },
+                ],
+              },
+            ],
+          };
+        }
+      }
+      case await isImage(url): {
+        const response = await fetch(`${url}`, { method: 'GET' });
+        const arrayBuffer = await response.arrayBuffer();
+        const mediaBuffer = Buffer.from(arrayBuffer);
+        const contentType = response.headers.get('Content-Type');
+        const imageMetadata = await sharp(mediaBuffer).metadata();
+        const { width, height } = imageMetadata;
+
+        return {
+          id: `${id}${timeStamp}/canvas/${timeStamp2}`,
+          type: 'Canvas',
+          height,
+          width,
+          label: { en: ['Image Item'] },
+          items: [
+            {
+              id: `${id}${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
+              type: 'AnnotationPage',
+              items: [
+                {
+                  id: `${id}${timeStamp}/annotation/${Date.now()}`,
+                  type: 'Annotation',
+                  motivation: 'painting',
+                  target: `${id}${timeStamp}/canvas/${timeStamp2}`,
+                  body: {
+                    id: media.value,
+                    type: 'Image',
+                    format: `Image/${contentType}`,
+                    height,
+                    width,
+                  },
+                },
+              ],
+            },
+          ],
+        };
+      }
+      default:
+        throw new UnsupportedMediaTypeException(
+          'media type is not supported',
+        );
+    }
+  } catch (error) {
+    console.error('error details:', error);
+    throw new BadRequestException(`Error fetching media: ${error.message}`);
+  }
+}
+
+export const getManifestMediasJSON = async (manifestMedias, id: string) => {
+  let medias = [];
+
+  for (const item of manifestMedias) {
+    for (const media of item.media) {
+      medias.push(await fetchMediaForItem(media, id));
+    }
+  }
+
+  return medias;
+};
+
+
+async function createManifestFrame(id: string, manifestMedias: any[], title: string, thumbnailUrl: string) {
+
+  if (!manifestMedias || !Array.isArray(manifestMedias)) {
+    throw new BadRequestException(
+      'Manifest media items are required and must be an array.',
+    );
+  }
+
+  if (!title) {
+    throw new BadRequestException('Manifest title is required.');
+  }
+
+  // Create the initial structure for the manifest
+  let manifestToCreate = {
+    '@context': 'https://iiif.io/api/presentation/3/context.json',
+    id: id,
+    type: 'Manifest',
+    label: { en: [title] },
+    items: [],
+    thumbnail: {},
+  };
+
+  if (thumbnailUrl.length > 0) {
+    manifestToCreate = {
+      ...manifestToCreate,
+      thumbnail: {
+        ['@id']: thumbnailUrl,
+        service: {
+          ['@context']: thumbnailUrl,
+          ['@id']: thumbnailUrl,
+          profile: thumbnailUrl,
+        },
+      },
+    };
+  }
+
+  manifestToCreate.items = await getManifestMediasJSON(manifestMedias, id);
+
+  return manifestToCreate;
+}
+
 @Injectable()
 export class MediaInterceptor implements NestInterceptor {
   async intercept(
@@ -33,252 +283,32 @@ export class MediaInterceptor implements NestInterceptor {
     const hash = generateAlphanumericSHA1Hash(
       `${label}${Date.now().toString()}`,
     );
+    const id = `${process.env.CADDY_URL}/${hash}/${label}.json/`;
     const { manifestMedias, title, manifestThumbnail } = request.body;
-    if (!manifestMedias || !Array.isArray(manifestMedias)) {
-      throw new BadRequestException(
-        'Manifest media items are required and must be an array.',
-      );
-    }
 
-    if (!title) {
-      throw new BadRequestException('Manifest title is required.');
-    }
-    // Create the initial structure for the manifest
-    let manifestToCreate = {
-      '@context': 'https://iiif.io/api/presentation/3/context.json',
-      id: `${process.env.CADDY_URL}/${hash}/${label}.json/`,
-      type: 'Manifest',
-      label: { en: [title] },
-      items: [],
-      thumbnail: {},
-    };
-
-    if (manifestThumbnail.length > 0) {
-      manifestToCreate = {
-        ...manifestToCreate,
-        thumbnail: {
-          ['@id']: manifestThumbnail,
-          service: {
-            ['@context']: manifestThumbnail,
-            ['@id']: manifestThumbnail,
-            profile: manifestThumbnail,
-          },
-        },
-      };
-    }
-
-    const fetchMediaForItem = async (media) => {
-      try {
-        const url = media.value.replace(
-          /^(http|https):\/\/localhost:\d+\//,
-          '$1://caddy/',
-        );
-        let videoId: string | null = null;
-        let youtubeJson = null;
-        let peertubeVideoJson = null;
-        switch (true) {
-          case isVideo(url): {
-            const timeStamp = Date.now();
-            const timeStamp2 = Date.now();
-            const timeStamp3 = Date.now();
-            const width = media.width;
-            const height = media.height;
-            const duration = Math.round(media.duration);
-            const mediaFormat = media.value.split('.').pop();
-            manifestToCreate.items.push({
-              id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-              type: 'Canvas',
-              height,
-              width,
-              duration,
-              label: { en: ['Raw Item'] },
-              items: [
-                {
-                  id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
-                  type: 'AnnotationPage',
-                  items: [
-                    {
-                      id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/annotation/${Date.now()}`,
-                      type: 'Annotation',
-                      motivation: 'painting',
-                      target: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-                      body: {
-                        id: media.value,
-                        type: 'Video',
-                        format: `Video/${mediaFormat}`,
-                        height,
-                        width,
-                        duration,
-                      },
-                    },
-                  ],
-                },
-              ],
-            });
-            break;
-          }
-          case isYouTubeVideo(url): {
-            videoId = getYouTubeVideoID(url);
-            if (videoId) {
-              youtubeJson = await getYoutubeJson(url);
-              const videoDuration = await getVideoDuration(url);
-              const timeStamp = Date.now();
-              const timeStamp2 = Date.now();
-              const timeStamp3 = Date.now();
-              let height: number;
-              let width: number;
-              if (youtubeJson.width >= youtubeJson.height) {
-                height = 1500;
-                width = (1500 * youtubeJson.width) / youtubeJson.height;
-              } else {
-                height = 1500;
-                width = (1500 * youtubeJson.height) / youtubeJson.width;
-              }
-              const duration = videoDuration;
-
-              manifestToCreate.items.push({
-                id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-                type: 'Canvas',
-                height,
-                width,
-                duration,
-                label: { en: ['Youtube Item'] },
-                items: [
-                  {
-                    id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
-                    type: 'AnnotationPage',
-                    items: [
-                      {
-                        id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/annotation/${Date.now()}`,
-                        type: 'Annotation',
-                        motivation: 'painting',
-                        target: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-                        body: {
-                          id: media.value,
-                          type: 'Video',
-                          format: `Video/MPG`,
-                          height,
-                          width,
-                          duration,
-                        },
-                      },
-                    ],
-                  },
-                ],
-              });
-            }
-            break;
-          }
-          case await isPeerTubeVideo(url): {
-            videoId = getPeerTubeVideoID(url);
-            if (videoId) {
-              peertubeVideoJson = await getPeerTubeVideoDetails(url, videoId);
-              const timeStamp = Date.now();
-              const timeStamp2 = Date.now();
-              const timeStamp3 = Date.now();
-              const defaultHeight = 480;
-              const defaultWidth = 854;
-
-              const height =
-                peertubeVideoJson.streamingPlaylists?.[0]?.files?.[0]?.height ||
-                defaultHeight;
-              const width =
-                peertubeVideoJson.streamingPlaylists?.[0]?.files?.[0]?.width ||
-                defaultWidth;
-
-              const duration = peertubeVideoJson.duration;
-              manifestToCreate.items.push({
-                id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-                type: 'Canvas',
-                height,
-                width,
-                duration,
-                label: { en: ['Peertube Item'] },
-                items: [
-                  {
-                    id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
-                    type: 'AnnotationPage',
-                    items: [
-                      {
-                        id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/annotation/${Date.now()}`,
-                        type: 'Annotation',
-                        motivation: 'painting',
-                        target: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-                        body: {
-                          id: media.value,
-                          type: 'Video',
-                          format: `Video/MPG`,
-                          height,
-                          width,
-                          duration,
-                        },
-                      },
-                    ],
-                  },
-                ],
-              });
-            }
-            break;
-          }
-          case await isImage(url): {
-            const response = await fetch(`${url}`, { method: 'GET' });
-            const arrayBuffer = await response.arrayBuffer();
-            const mediaBuffer = Buffer.from(arrayBuffer);
-            const contentType = response.headers.get('Content-Type');
-            const imageMetadata = await sharp(mediaBuffer).metadata();
-            const { width, height } = imageMetadata;
-            const timeStamp = Date.now();
-            const timeStamp2 = Date.now();
-            const timeStamp3 = Date.now();
-            manifestToCreate.items.push({
-              id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-              type: 'Canvas',
-              height,
-              width,
-              label: { en: ['Image Item'] },
-              items: [
-                {
-                  id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}/annotation-page/${timeStamp3}`,
-                  type: 'AnnotationPage',
-                  items: [
-                    {
-                      id: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/annotation/${Date.now()}`,
-                      type: 'Annotation',
-                      motivation: 'painting',
-                      target: `${process.env.CADDY_URL}/${hash}/${label}.json/${timeStamp}/canvas/${timeStamp2}`,
-                      body: {
-                        id: media.value,
-                        type: 'Image',
-                        format: `Image/${contentType}`,
-                        height,
-                        width,
-                      },
-                    },
-                  ],
-                },
-              ],
-            });
-            break;
-          }
-          default:
-            throw new UnsupportedMediaTypeException(
-              'media type is not supported',
-            );
-        }
-      } catch (error) {
-        console.error('error details:', error);
-        throw new BadRequestException(`Error fetching media: ${error.message}`);
-      }
-    };
-
-    for (const item of manifestMedias) {
-      for (const media of item.media) {
-        await fetchMediaForItem(media);
-      }
-    }
+    const manifestToCreate = await createManifestFrame(id, manifestMedias, title, manifestThumbnail);
 
     request.body.processedManifest = manifestToCreate;
     request.body.hash = hash;
+
+    return next.handle();
+  }
+}
+
+@Injectable()
+export class UpdateProcessedManifestInterceptor implements NestInterceptor {
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Promise<Observable<any>> {
+    const request = context.switchToHttp().getRequest();
+    const id = request.body.jsonID;
+    const { manifestMedias, title, thumbnailUrl } = request.body;
+
+    const manifestToCreate = await createManifestFrame(id, manifestMedias, title, thumbnailUrl);
+
+    request.body.processedManifest = manifestToCreate;
+
     return next.handle();
   }
 }

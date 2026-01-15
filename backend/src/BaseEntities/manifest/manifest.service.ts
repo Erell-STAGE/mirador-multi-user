@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateManifestDto } from './dto/create-manifest.dto';
-import { UpdateManifestDto } from './dto/update-manifest.dto';
+import { UpdateManifestInfoDto } from './dto/update-manifest.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Manifest } from './entities/manifest.entity';
 import { Repository } from 'typeorm';
@@ -17,7 +17,7 @@ export class ManifestService {
   constructor(
     @InjectRepository(Manifest)
     private readonly manifestRepository: Repository<Manifest>,
-  ) {}
+  ) { }
 
   async create(createManifestDto: CreateManifestDto) {
     try {
@@ -47,7 +47,7 @@ export class ManifestService {
     }
   }
 
-  async update(id: number, updateManifestDto: UpdateManifestDto) {
+  async update(id: number, updateManifestDto: UpdateManifestInfoDto) {
     try {
       const done = await this.manifestRepository.update(id, updateManifestDto);
       if (done.affected != 1) throw new NotFoundException(id);

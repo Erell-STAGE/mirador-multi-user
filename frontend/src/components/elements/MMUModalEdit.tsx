@@ -7,8 +7,10 @@ import { ModalConfirmDelete } from '../../features/projects/components/ModalConf
 import { ItemsRights } from '../../features/user-group/types/types.ts';
 import { ListItem } from '../types.ts';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { MediaGroupRights, mediaOrigin } from '../../features/media/types/types.ts';
-import { ManifestGroupRights, manifestOrigin } from '../../features/manifest/types/types.ts';
+import {
+  MediaGroupRights, mediaOrigin, MediaTypes
+} from '../../features/media/types/types.ts';
+import { ManifestJSON, ManifestGroupRights, manifestOrigin } from '../../features/manifest/types/types.ts';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -29,6 +31,8 @@ import { fetchManifest } from '../../features/manifest/api/fetchManifest.ts';
 import { updateManifestJson } from '../../features/manifest/api/updateManifestJson.ts';
 import { Selector } from '../Selector.tsx';
 import { useTranslation } from 'react-i18next';
+import { IIIFCanvases } from 'features/manifest/component/ManifestCreationForm.tsx';
+import { ManifestCreationFormCanvases } from 'features/manifest/component/ManifestCreationFormCanvases.tsx';
 
 interface ModalItemProps<T, G> {
   item: T;
@@ -130,6 +134,7 @@ export const MMUModalEdit = <
   const [newItemMetadataCreator, setNewItemMetadataCreator] = useState(
     metadata?.creator ? metadata.creator : null,
   );
+  const [newItemManifestCanvases, setItemManifestCanvases] = useState<IIIFCanvases[]>([]);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openDuplicateModal, setOpenDuplicateModal] = useState(false);
   const [metadataFormData, setMetadataFormData] = useState<MetadataArray>();
@@ -222,7 +227,10 @@ export const MMUModalEdit = <
       );
     }
     if (updateItem) {
-      updateItem(itemToUpdate);
+      if (objectTypes === ObjectTypes.MANIFEST) {
+        updateItem({ ...itemToUpdate, manifestMedias: newItemManifestCanvases });
+      } else
+        updateItem(itemToUpdate);
     }
   };
 
@@ -286,10 +294,32 @@ export const MMUModalEdit = <
   const handleDuplicateModal = () => {
     setOpenDuplicateModal(!openDuplicateModal);
   };
+
   const handleFetchManifest = async () => {
     try {
       const manifest = await fetchManifest(item.hash!, item.path!);
       setJsonElementToEditInAdvancedEditor(manifest);
+
+      if (manifest) {
+        const actualCanvas = (manifest as unknown as ManifestJSON).items.map((item, index) => {
+          const media = item.items[0].items[0].body;
+          return {
+            media: [
+              {
+                title: `media-${index}`,
+                value: media.id,
+                type: media.type as MediaTypes,
+                duration: media.duration,
+                height: media.height,
+                width: media.width,
+                thumbnailUrl: media.id
+              },
+            ],
+          }
+        })
+        setItemManifestCanvases(actualCanvas);
+      }
+
     } catch (error) {
       console.error(error);
     }
@@ -383,6 +413,7 @@ export const MMUModalEdit = <
         hash: item.hash!,
       };
       await updateManifestJson(newManifest);
+      handleFetchManifest();
     }
     if (objectTypes === ObjectTypes.PROJECT && item.userWorkspace) {
       // Update project userworkspace
@@ -403,16 +434,25 @@ export const MMUModalEdit = <
     return pattern.test(string);
   }
 
+
   return (
     <Grid container sx={{ maxHeight: 600 }}>
       <Tabs value={tabValue} onChange={handleChangeTab} aria-label="basic tabs">
         <Tab label={t("general")} {...a11yProps(0)} />
+        {objectTypes === ObjectTypes.MANIFEST &&
+          (
+            <Tab
+              label="Médias"
+              {...a11yProps(1)}
+              disabled={!jsonElementToEditInAdvancedEditor}
+            />
+          )}
         <Tab
           label={objectTypes != ObjectTypes.GROUP ? t("share") : t("members")}
           {...a11yProps(2)}
         />
         {objectTypes !== ObjectTypes.GROUP && (
-          <Tab label={t("metadata")} {...a11yProps(1)} />
+          <Tab label={t("metadata")} {...a11yProps(3)} />
         )}
         {(objectTypes === ObjectTypes.PROJECT ||
           (objectTypes === ObjectTypes.MANIFEST &&
@@ -429,24 +469,40 @@ export const MMUModalEdit = <
               <span>
                 <Tab
                   label={t("advancedEdit")}
-                  {...a11yProps(3)}
+                  {...a11yProps(4)}
                   disabled={!jsonElementToEditInAdvancedEditor}
                 />
               </span>
             </Tooltip>
           )}
+
         {(objectTypes === ObjectTypes.PROJECT ||
           (objectTypes === ObjectTypes.MANIFEST &&
             item.origin !== manifestOrigin.LINK)) &&
           jsonElementToEditInAdvancedEditor && (
             <Tab
               label={t("advancedEdit")}
-              {...a11yProps(3)}
+              {...a11yProps(4)}
               disabled={!jsonElementToEditInAdvancedEditor}
             />
           )}
       </Tabs>
       <Grid item container flexDirection="column">
+        <CustomTabPanel value={tabValue} index={1}>
+          <Grid container flexWrap="nowrap" flexDirection="column" gap={"20px"}
+            item
+            sx={{
+              minHeight: "55px",
+              height: "400px",
+              overflowY: "auto",
+            }}>
+            <ManifestCreationFormCanvases
+              canvases={newItemManifestCanvases}
+              t={t}
+              setCanvases={setItemManifestCanvases}
+            />
+          </Grid>
+        </CustomTabPanel>
         <CustomTabPanel value={tabValue} index={0}>
           <Grid
             container
@@ -577,7 +633,7 @@ export const MMUModalEdit = <
           listOfItem &&
           setItemToAdd &&
           getOptionLabel !== undefined && (
-            <CustomTabPanel value={tabValue} index={1}>
+            <CustomTabPanel value={tabValue} index={2}>
               <Grid
                 container
                 item
@@ -614,7 +670,7 @@ export const MMUModalEdit = <
             </CustomTabPanel>
           )}
         {!isGroups && (
-          <CustomTabPanel value={tabValue} index={2}>
+          <CustomTabPanel value={tabValue} index={3}>
             <Grid
               container
               item
@@ -639,7 +695,7 @@ export const MMUModalEdit = <
         )}
         {jsonElementToEditInAdvancedEditor &&
           item.origin !== manifestOrigin.LINK && (
-            <CustomTabPanel value={tabValue} index={3}>
+            <CustomTabPanel value={tabValue} index={4}>
               <Grid
                 container
                 item

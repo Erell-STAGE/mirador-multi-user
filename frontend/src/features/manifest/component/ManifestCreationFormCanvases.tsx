@@ -11,6 +11,7 @@ import {
 import { MediaTypes } from "../../media/types/types";
 import { ManifestCreationFormCanvas } from "./ManifestCreationFormCanvas";
 import { IIIFCanvases, MediaField } from "./ManifestCreationForm";
+import { useEffect } from "react";
 
 interface ManifestCreationFormCanvasesProps {
   canvases: IIIFCanvases[];
@@ -76,6 +77,12 @@ export const ManifestCreationFormCanvases = ({
     updatedCanvas[canvasIndex].media[0] = media;
     setCanvases([...updatedCanvas]);
   };
+
+  useEffect(() => {
+    canvases.forEach((canva, index) => {
+      if (canva.media[0].thumbnailUrl) handleMediaURLChange(index, canva.media[0].thumbnailUrl);
+    })
+  }, []);
 
   const handleRemoveCanvas = (itemIndex: number) => {
     const updatedItems = canvases.filter((_, i) => i !== itemIndex);

@@ -71,13 +71,35 @@ export type UploadAndLinkManifestDto = {
   rights?: ManifestGroupRights;
 };
 
+export type ManifestJSON = {
+  '@context': string,
+  id: string,
+  type: string,
+  label: {
+    en: any[],
+  },
+  items: ManifestItem[],
+  thumbnail: {
+    '@id': string,
+    service: {
+      "@context": string,
+      "@id": string,
+      profile: string
+    }
+  };
+}
+
 export type ManifestItem = {
   id: string;
   type: string;
   height: number;
   width: number;
   label: { en: string[] };
-  items: any[];
+  items: {
+    id: string,
+    type: string,
+    items: ManifestSubItem[],
+  }[];
 };
 
 export type ManifestSubItem = {
@@ -91,5 +113,6 @@ export type ManifestSubItem = {
     format: string;
     height: number;
     width: number;
+    duration?: number,
   };
 };

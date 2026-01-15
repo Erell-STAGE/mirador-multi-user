@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   HttpException,
   HttpStatus,
@@ -20,7 +21,7 @@ import { AddManifestToGroupDto } from './dto/add-manifest-to-group.dto';
 import { join } from 'path';
 import * as fs from 'fs';
 import { UpdateManifestGroupRelation } from './dto/update-manifest-group-Relation';
-import { UpdateManifestDto } from '../../BaseEntities/manifest/dto/update-manifest.dto';
+import { UpdateManifestInfoDto } from '../../BaseEntities/manifest/dto/update-manifest.dto';
 import { ActionType } from '../../enum/actions';
 import { UpdateManifestJsonDto } from './dto/UpdateManifestJsonDto';
 import * as path from 'node:path';
@@ -39,7 +40,7 @@ export class LinkManifestGroupService {
     private readonly manifestService: ManifestService,
     private readonly groupService: UserGroupService,
     private readonly linkUserGroupService: LinkUserGroupService,
-  ) {}
+  ) { }
 
   async createManifest(createManifestDto) {
     try {
@@ -130,7 +131,7 @@ export class LinkManifestGroupService {
     }
   }
 
-  async updateManifest(updateManifestDto: UpdateManifestDto) {
+  async updateManifest(updateManifestDto: UpdateManifestInfoDto) {
     try {
       return await this.manifestService.update(
         updateManifestDto.id,

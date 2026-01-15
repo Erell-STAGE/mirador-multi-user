@@ -23,7 +23,7 @@ import { generateAlphanumericSHA1Hash } from '../../utils/hashGenerator';
 import * as fs from 'fs';
 import { ManifestGroupRights } from '../../enum/rights';
 import { manifestOrigin } from '../../enum/origins';
-import { MediaInterceptor } from '../../utils/Custom_pipes/manifest-creation.pipe';
+import { MediaInterceptor, UpdateProcessedManifestInterceptor } from '../../utils/Custom_pipes/manifest-creation.pipe';
 import { manifestCreationDto } from './dto/manifestCreationDto';
 import { UpdateManifestDto } from '../../BaseEntities/manifest/dto/update-manifest.dto';
 import { UpdateManifestGroupRelation } from './dto/update-manifest-group-Relation';
@@ -49,7 +49,7 @@ import { UPLOAD_FOLDER } from '../../utils/constants';
 export class LinkManifestGroupController {
   constructor(
     private readonly linkManifestGroupService: LinkManifestGroupService,
-  ) {}
+  ) { }
 
   @ApiOperation({ summary: 'Get All manifest a specific group can access' })
   @ApiOkResponse({
@@ -222,6 +222,7 @@ export class LinkManifestGroupController {
   @SetMetadata('action', ActionType.UPDATE)
   @UseGuards(AuthGuard)
   @Patch('manifest')
+  @UseInterceptors(UpdateProcessedManifestInterceptor)
   async updateManifest(
     @Body() updateManifestDto: UpdateManifestDto,
     @Req() request,
@@ -231,7 +232,20 @@ export class LinkManifestGroupController {
       request.user.sub,
       updateManifestDto.id,
       async () => {
-        return this.linkManifestGroupService.updateManifest(updateManifestDto);
+
+        const { thumbnailUrl, jsonID, manifestMedias, processedManifest, ...updateManifestDB } = updateManifestDto;
+
+        const test: UpdateManifestJsonDto = {
+          id: updateManifestDto.id,
+          json: updateManifestDto.processedManifest,
+          origin: updateManifestDto.origin,
+          path: updateManifestDto.path,
+          hash: updateManifestDto.hash
+        }
+
+        const message = await this.linkManifestGroupService.updateManifestJson(test);
+
+        return this.linkManifestGroupService.updateManifest(updateManifestDB);
       },
     );
   }
