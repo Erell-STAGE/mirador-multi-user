@@ -3,15 +3,17 @@ import { useState } from "react";
 import { MediaField } from "./ManifestCreationForm";
 
 interface MediaImageThumbnailProps {
-  media: MediaField;
+  media?: MediaField;
+  thumbnail?: string;
   t: {
     (key: string): string;
     (key: string, options?: Record<string, number>): string;
   };
 }
 
-export function MediaImageThumbnail({ media, t }: MediaImageThumbnailProps) {
+export function MediaImageThumbnail({ media, thumbnail, t }: MediaImageThumbnailProps) {
   const [isMediaValidURL, setIsMediaValidURL] = useState(false);
+  const thumbnailUrl = media ? media.thumbnailUrl : thumbnail;
   return (
     <Grid>
       {!isMediaValidURL && (
@@ -21,10 +23,10 @@ export function MediaImageThumbnail({ media, t }: MediaImageThumbnailProps) {
           </Typography>
         </Grid>
       )}
-      {media.thumbnailUrl && (
+      {thumbnailUrl && (
         <Box
           component="img"
-          src={media.thumbnailUrl}
+          src={thumbnailUrl}
           loading="lazy"
           onLoad={() => setIsMediaValidURL(true)}
           onError={() => setIsMediaValidURL(false)}

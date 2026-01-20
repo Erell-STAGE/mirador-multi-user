@@ -33,6 +33,9 @@ import { Selector } from '../Selector.tsx';
 import { useTranslation } from 'react-i18next';
 import { IIIFCanvases } from 'features/manifest/component/ManifestCreationForm.tsx';
 import { ManifestCreationFormCanvases } from 'features/manifest/component/ManifestCreationFormCanvases.tsx';
+import { MediaVideoThumbnail } from 'features/manifest/component/MediaVideoThumbnail.tsx';
+import { getPeerTubeThumbnailUrl, getPeerTubeVideoID, getYoutubeJson, isPeerTubeVideo, isRawVideo, isYouTubeVideo } from 'features/media/utils/utils.ts';
+import { MediaImageThumbnail } from 'features/manifest/component/MediaImageThumbnail.tsx';
 
 interface ModalItemProps<T, G> {
   item: T;
@@ -56,7 +59,7 @@ interface ModalItemProps<T, G> {
   searchBarLabel: string;
   description: string;
   HandleOpenModalEdit: () => void;
-  thumbnailUrl?: string | null;
+  thumbnailUrl?: string | undefined;
   metadata?: Record<string, string>;
   isGroups?: boolean;
   objectTypes?: ObjectTypes;
@@ -128,6 +131,7 @@ export const MMUModalEdit = <
   const [newItemTitle, setNewItemTitle] = useState(itemLabel);
   const [newItemDescription, setNewItemDescription] = useState(description);
   const [newItemThumbnailUrl, setNewItemThumbnailUrl] = useState(thumbnailUrl);
+  const [newItemThumbnailUrlType, setNewItemThumbnailUrlType] = useState(MediaTypes.IMAGE);
   const [newItemDate, setNewItemDate] = useState<Dayjs | null>(
     dayjs(item.createdAt),
   );
@@ -229,6 +233,7 @@ export const MMUModalEdit = <
     if (updateItem) {
       if (objectTypes === ObjectTypes.MANIFEST) {
         updateItem({ ...itemToUpdate, manifestMedias: newItemManifestCanvases });
+        // handleFetchManifest();
       } else
         updateItem(itemToUpdate);
     }
@@ -272,9 +277,28 @@ export const MMUModalEdit = <
     setNewItemTitle(e.target.value);
   };
 
-  const handleChangeThumbnailUrl = (e: ChangeEvent<HTMLInputElement>) => {
-    setNewItemThumbnailUrl(e.target.value);
-  };
+  const handleChangeThumbnailUrl = async (e: ChangeEvent<HTMLInputElement>) => {
+    let thumbnailUrl: string | undefined = e.target.value;
+
+    if (isRawVideo(thumbnailUrl)) {
+      setNewItemThumbnailUrlType(MediaTypes.VIDEO);
+    } else if (isYouTubeVideo(thumbnailUrl)) {
+      const youtubeJson = await getYoutubeJson(thumbnailUrl);
+      thumbnailUrl = youtubeJson?.thumbnail_url ?? undefined;
+      setNewItemThumbnailUrlType(MediaTypes.VIDEO);
+    } else if (await isPeerTubeVideo(thumbnailUrl)) {
+      const videoId = getPeerTubeVideoID(thumbnailUrl);
+      if (videoId) {
+        thumbnailUrl = await getPeerTubeThumbnailUrl(thumbnailUrl, videoId);
+        setNewItemThumbnailUrlType(MediaTypes.VIDEO);
+      }
+    } else {
+      // Set as image if not YouTube or PeerTube video or video classic file format
+      setNewItemThumbnailUrlType(MediaTypes.IMAGE);
+    };
+
+    setNewItemThumbnailUrl(thumbnailUrl);
+  }
 
   const handleChangeCreator = (e: ChangeEvent<HTMLInputElement>) => {
     setNewItemMetadataCreator(e.target.value);
@@ -601,6 +625,9 @@ export const MMUModalEdit = <
               container
               justifyContent="flex-end"
               alignItems="center"
+              flexDirection="row"
+              flexWrap="nowrap"
+              gap="10px"
             >
               <TextField
                 type="text"
@@ -609,6 +636,7 @@ export const MMUModalEdit = <
                   maxLength: 255,
                 }}
                 onChange={handleChangeThumbnailUrl}
+                onFocus={(e) => e.target.select()}
                 variant="outlined"
                 defaultValue={
                   thumbnailUrl && isValidUrl(thumbnailUrl)
@@ -618,6 +646,18 @@ export const MMUModalEdit = <
                 multiline
                 fullWidth
               />
+              {objectTypes === ObjectTypes.MANIFEST && (
+                <Grid item>
+                  {newItemThumbnailUrlType === MediaTypes.VIDEO && (
+                    <MediaVideoThumbnail
+                      thumbnail={newItemThumbnailUrl}
+                    />
+                  )}
+                  {newItemThumbnailUrlType === MediaTypes.IMAGE && (
+                    <MediaImageThumbnail thumbnail={newItemThumbnailUrl} t={t} />
+                  )}
+                </Grid>
+              )}
             </Grid>
             {/*<Grid*/}
             {/*item*/}

@@ -3,18 +3,20 @@ import { useRef } from "react";
 import { MediaField } from "./ManifestCreationForm";
 
 interface MediaVideoThumbnailProps {
-  media: MediaField;
-  setMedia: (media: MediaField) => void;
+  media?: MediaField;
+  setMedia?: (media: MediaField) => void;
+  thumbnail?: string;
 }
 
 export function MediaVideoThumbnail({
   media,
   setMedia,
+  thumbnail
 }: MediaVideoThumbnailProps) {
   const handleLoadedMetadata = () => {
     const video = videoEl.current;
     if (!video) return;
-    setMedia({
+    media && setMedia && setMedia({
       ...media,
       duration: video.duration!,
       height: video.videoHeight!,
@@ -24,12 +26,15 @@ export function MediaVideoThumbnail({
 
   const videoEl = useRef<HTMLVideoElement | null>(null);
 
+  const thumbnailUrl = media ? media.thumbnailUrl : thumbnail;
+  const value = media ? media.value : thumbnail;
+
   return (
     <Grid>
-      {media.thumbnailUrl && (
+      {thumbnailUrl && (
         <Box
           component="img"
-          src={media.thumbnailUrl}
+          src={thumbnailUrl}
           loading="lazy"
           sx={{
             width: 200,
@@ -42,11 +47,11 @@ export function MediaVideoThumbnail({
           }}
         />
       )}
-      {!media.thumbnailUrl && (
+      {!thumbnailUrl && (
         <video
           width="200"
           ref={videoEl}
-          src={media.value}
+          src={value}
           controls
           onLoadedMetadata={handleLoadedMetadata}
         />
