@@ -94,6 +94,7 @@ export type ManifestItem = {
   type: string;
   height: number;
   width: number;
+  duration?: number;
   label: { en: string[] };
   items: {
     id: string,

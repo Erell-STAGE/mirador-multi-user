@@ -5,6 +5,7 @@ interface IFieldFormProps {
   label: string;
   value: string;
   onChange?: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
+  onFocus?: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
   type?: string;
   placeholder: string;
   name: string;
@@ -14,6 +15,7 @@ export const FieldForm = ({
   label,
   value,
   onChange,
+  onFocus,
   type = "text",
   placeholder,
   name,
@@ -30,6 +32,7 @@ export const FieldForm = ({
         type={type}
         value={value}
         onChange={onChange}
+        onFocus={onFocus}
         placeholder={placeholder}
         name={name}
       />

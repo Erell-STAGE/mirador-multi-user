@@ -34,6 +34,7 @@ import {
 } from '../../features/manifest/types/types';
 import { getUserManifests } from '../../features/manifest/api/getUserGroupManifests.ts';
 import Grid from '@mui/material/Grid';
+import { fetchManifest } from 'features/manifest/api/fetchManifest.ts';
 
 interface ISideDrawerProps {
   handleDisconnect: () => void;
@@ -164,11 +165,21 @@ export const SideDrawer = ({
   };
 
   const [manifests, setManifests] = useState<Manifest[]>([]);
+  /* 
+    const getManifestFromUrl = async (manifestUrl: string) => {
+      try {
+        const response = await fetch(manifestUrl);
+        return await response.json();
+      } catch (error) {
+        console.error(error);
+      }
+    }; 
+    */
 
-  const getManifestFromUrl = async (manifestUrl: string) => {
+  const getManifestFromUrl = async (manifest: Manifest) => {
     try {
-      const response = await fetch(manifestUrl);
-      return await response.json();
+      const manifestJSON = await fetchManifest(manifest.hash!, manifest.path!);
+      return manifestJSON;
     } catch (error) {
       console.error(error);
     }
@@ -179,7 +190,7 @@ export const SideDrawer = ({
 
     const updatedManifests = await Promise.all(
       allManifests.map(async (manifest: Manifest) => {
-        const manifestJson = await getManifestFromUrl(manifest.path);
+        const manifestJson = await getManifestFromUrl(manifest);
         return { ...manifest, json: manifestJson };
       }),
     );

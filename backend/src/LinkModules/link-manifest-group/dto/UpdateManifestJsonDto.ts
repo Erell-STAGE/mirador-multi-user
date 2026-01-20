@@ -1,9 +1,10 @@
+import { ManifestJSON } from 'src/utils/Custom_pipes/manifest-creation.pipe';
 import { manifestOrigin } from '../../../enum/origins';
 
 export class UpdateManifestJsonDto {
   id: number;
 
-  json:any;
+  json: ManifestJSON;
 
   origin: manifestOrigin;
 

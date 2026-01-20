@@ -22,6 +22,54 @@ import {
 import { generateAlphanumericSHA1Hash } from '../hashGenerator';
 import { serializeToValidUrl } from '../serializeToValideUrl';
 
+
+export type ManifestJSON = {
+  '@context': string,
+  id: string,
+  type: string,
+  label: {
+    en: any[],
+  },
+  items: ManifestItem[],
+  thumbnail: {
+    '@id': string,
+    service: {
+      "@context": string,
+      "@id": string,
+      profile: string
+    }
+  } | {};
+}
+
+export type ManifestItem = {
+  id: string;
+  type: string;
+  height: number;
+  width: number;
+  duration?: number;
+  label: { en: string[] };
+  items: {
+    id: string,
+    type: string,
+    items: ManifestSubItem[],
+  }[];
+};
+
+export type ManifestSubItem = {
+  id: string;
+  type: string;
+  motivation: string;
+  target: string;
+  body: {
+    id: string;
+    type: string;
+    format: string;
+    height: number;
+    width: number;
+    duration?: number,
+  };
+};
+
 const fetchMediaForItem = async (media, id: string) => {
   try {
     const url = media.value.replace(
@@ -37,13 +85,15 @@ const fetchMediaForItem = async (media, id: string) => {
     let youtubeJson = null;
     let peertubeVideoJson = null;
 
+    let mediaJSON: ManifestItem;
+
     switch (true) {
       case isVideo(url): {
         const width = media.width;
         const height = media.height;
         const duration = Math.round(media.duration);
         const mediaFormat = media.value.split('.').pop();
-        return {
+        mediaJSON = {
           id: `${id}${timeStamp}/canvas/${timeStamp2}`,
           type: 'Canvas',
           height,
@@ -90,7 +140,7 @@ const fetchMediaForItem = async (media, id: string) => {
           }
           const duration = videoDuration;
 
-          return {
+          mediaJSON = {
             id: `${id}${timeStamp}/canvas/${timeStamp2}`,
             type: 'Canvas',
             height,
@@ -138,7 +188,8 @@ const fetchMediaForItem = async (media, id: string) => {
             defaultWidth;
 
           const duration = peertubeVideoJson.duration;
-          return {
+
+          mediaJSON = {
             id: `${id}${timeStamp}/canvas/${timeStamp2}`,
             type: 'Canvas',
             height,
@@ -178,7 +229,8 @@ const fetchMediaForItem = async (media, id: string) => {
         const imageMetadata = await sharp(mediaBuffer).metadata();
         const { width, height } = imageMetadata;
 
-        return {
+        mediaJSON =
+        {
           id: `${id}${timeStamp}/canvas/${timeStamp2}`,
           type: 'Canvas',
           height,
@@ -208,6 +260,7 @@ const fetchMediaForItem = async (media, id: string) => {
         };
       }
       default:
+        if (mediaJSON) return mediaJSON;
         throw new UnsupportedMediaTypeException(
           'media type is not supported',
         );
@@ -219,7 +272,7 @@ const fetchMediaForItem = async (media, id: string) => {
 }
 
 export const getManifestMediasJSON = async (manifestMedias, id: string) => {
-  let medias = [];
+  let medias: ManifestItem[] = [];
 
   for (const item of manifestMedias) {
     for (const media of item.media) {
@@ -244,7 +297,7 @@ async function createManifestFrame(id: string, manifestMedias: any[], title: str
   }
 
   // Create the initial structure for the manifest
-  let manifestToCreate = {
+  let manifestToCreate: ManifestJSON = {
     '@context': 'https://iiif.io/api/presentation/3/context.json',
     id: id,
     type: 'Manifest',

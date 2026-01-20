@@ -52,6 +52,7 @@ export const ManifestCreationFormCanvas = ({
                 label={t("mediaLink")}
                 value={media.value}
                 onChange={onMediaURLChange}
+                onFocus={(e) => e.target.select()}
               />
             </Grid>
             {isMediaLoading && <h2>Loading ...</h2>}

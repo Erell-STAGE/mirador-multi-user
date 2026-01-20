@@ -149,7 +149,7 @@ export const MMUModalEdit = <
   const [
     jsonElementToEditInAdvancedEditor,
     setJsonElementToEditInAdvancedEditor,
-  ] = useState<Record<string, string> | undefined>();
+  ] = useState<Record<string, string> | ManifestJSON | undefined>();
   const user = useUser();
   const { t } = useTranslation();
 
@@ -297,7 +297,7 @@ export const MMUModalEdit = <
 
   const handleFetchManifest = async () => {
     try {
-      const manifest = await fetchManifest(item.hash!, item.path!);
+      const manifest = await fetchManifest(item.hash!, item.path!, false);
       setJsonElementToEditInAdvancedEditor(manifest);
 
       if (manifest) {

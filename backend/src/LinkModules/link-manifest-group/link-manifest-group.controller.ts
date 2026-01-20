@@ -233,9 +233,9 @@ export class LinkManifestGroupController {
       updateManifestDto.id,
       async () => {
 
-        const { thumbnailUrl, jsonID, manifestMedias, processedManifest, ...updateManifestDB } = updateManifestDto;
+        const { jsonID, manifestMedias, processedManifest, ...updateManifestDB } = updateManifestDto;
 
-        const test: UpdateManifestJsonDto = {
+        const updatedManifest: UpdateManifestJsonDto = {
           id: updateManifestDto.id,
           json: updateManifestDto.processedManifest,
           origin: updateManifestDto.origin,
@@ -243,7 +243,7 @@ export class LinkManifestGroupController {
           hash: updateManifestDto.hash
         }
 
-        const message = await this.linkManifestGroupService.updateManifestJson(test);
+        const message = await this.linkManifestGroupService.updateManifestJson(updatedManifest);
 
         return this.linkManifestGroupService.updateManifest(updateManifestDB);
       },
