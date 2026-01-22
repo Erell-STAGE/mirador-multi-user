@@ -23,7 +23,7 @@ import { generateAlphanumericSHA1Hash } from '../../utils/hashGenerator';
 import * as fs from 'fs';
 import { ManifestGroupRights } from '../../enum/rights';
 import { manifestOrigin } from '../../enum/origins';
-import { MediaInterceptor, UpdateProcessedManifestInterceptor } from '../../utils/Custom_pipes/manifest-creation.pipe';
+import { MediaInterceptor } from '../../utils/Custom_pipes/manifest-creation.pipe';
 import { manifestCreationDto } from './dto/manifestCreationDto';
 import { UpdateManifestDto } from '../../BaseEntities/manifest/dto/update-manifest.dto';
 import { UpdateManifestGroupRelation } from './dto/update-manifest-group-Relation';
@@ -41,7 +41,6 @@ import { LinkManifestGroup } from './entities/link-manifest-group.entity';
 import { Manifest } from '../../BaseEntities/manifest/entities/manifest.entity';
 import { UpdateManifestJsonDto } from './dto/UpdateManifestJsonDto';
 import { fileFilterManifest } from './utils/fileFilterManifest';
-import { serializeToValidUrl } from '../../utils/serializeToValideUrl';
 import { UPLOAD_FOLDER } from '../../utils/constants';
 
 @ApiBearerAuth()
@@ -144,7 +143,6 @@ export class LinkManifestGroupController {
     if (!label) {
       throw new BadRequestException('Manifest title is required');
     }
-    const serializeLabel = serializeToValidUrl(label);
 
     const hash = createManifestDto.hash;
     const uploadPath = `${UPLOAD_FOLDER}/${hash}`;
@@ -152,18 +150,18 @@ export class LinkManifestGroupController {
 
     try {
       const manifestJson = JSON.stringify(createManifestDto.processedManifest);
-      const filePath = `${uploadPath}/${serializeLabel}.json`;
+      const filePath = `${uploadPath}/${label}.json`;
       await fs.promises.writeFile(filePath, manifestJson);
 
       const manifestToCreate = {
         title: label,
         description: 'your manifest description',
         hash: hash,
-        path: `${serializeLabel}.json`,
+        path: `${label}.json`,
         idCreator: createManifestDto.idCreator,
         rights: ManifestGroupRights.ADMIN,
         origin: manifestOrigin.CREATE,
-        thumbnailUrl: createManifestDto.manifestThumbnail,
+        thumbnailUrl: createManifestDto.thumbnailUrl,
       };
 
       return await this.linkManifestGroupService.createManifest(
@@ -222,7 +220,7 @@ export class LinkManifestGroupController {
   @SetMetadata('action', ActionType.UPDATE)
   @UseGuards(AuthGuard)
   @Patch('manifest')
-  @UseInterceptors(UpdateProcessedManifestInterceptor)
+  @UseInterceptors(MediaInterceptor)
   async updateManifest(
     @Body() updateManifestDto: UpdateManifestDto,
     @Req() request,
@@ -233,13 +231,14 @@ export class LinkManifestGroupController {
       updateManifestDto.id,
       async () => {
 
-        const { jsonID, manifestMedias, processedManifest, ...updateManifestDB } = updateManifestDto;
+        const { jsonID, manifestMedias, processedManifest, oldPath, ...updateManifestDB } = updateManifestDto;
 
         const updatedManifest: UpdateManifestJsonDto = {
           id: updateManifestDto.id,
           json: updateManifestDto.processedManifest,
           origin: updateManifestDto.origin,
           path: updateManifestDto.path,
+          oldPath: updateManifestDto.oldPath,
           hash: updateManifestDto.hash
         }
 

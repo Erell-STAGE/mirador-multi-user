@@ -13,7 +13,7 @@ export const updateManifest = async (manifest: Manifest) => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(manifestToUpdate),
+      body: JSON.stringify({ ...manifestToUpdate, jsonID: json?.id }),
     },
   );
   return await response.json();

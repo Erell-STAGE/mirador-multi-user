@@ -165,6 +165,12 @@ export class LinkManifestGroupService {
 
       // Build the path to the file
       const path = `${UPLOAD_FOLDER}/${updateManifestJsonDto.hash}/${updateManifestJsonDto.path}`;
+      const oldPath = updateManifestJsonDto.oldPath ? `${UPLOAD_FOLDER}/${updateManifestJsonDto.hash}/${updateManifestJsonDto.oldPath}` : undefined;
+
+      // Rename file
+      if (oldPath && path !== oldPath) {
+        fs.renameSync(oldPath, path)
+      }
 
       // Overwrite the file with the new JSON data
       this.writeJsonFile(path, updateManifestJsonDto.json);

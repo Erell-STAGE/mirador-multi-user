@@ -3,5 +3,5 @@ export function serializeToValidUrl(input) {
 
   const encoded = encodeURIComponent(trimmed);
 
-  return encoded.replace(/%20/g, '-');
+  return encoded;
 }

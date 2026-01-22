@@ -11,4 +11,5 @@ export class UpdateManifestDto extends UpdateManifestInfoDto {
   jsonID: string;
   manifestMedias: any[];
   processedManifest: ManifestJSON;
+  oldPath: string;
 }

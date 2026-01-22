@@ -4,7 +4,7 @@ export class manifestCreationDto {
   @IsNumber()
   idCreator: number;
   @IsString()
-  manifestThumbnail: string;
+  thumbnailUrl: string;
   @IsObject()
   processedManifest: any;
   @IsString()

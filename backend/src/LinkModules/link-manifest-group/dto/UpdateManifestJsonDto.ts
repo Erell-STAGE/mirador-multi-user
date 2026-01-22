@@ -10,5 +10,7 @@ export class UpdateManifestJsonDto {
 
   path: string;
 
+  oldPath: string;
+
   hash: string;
 }

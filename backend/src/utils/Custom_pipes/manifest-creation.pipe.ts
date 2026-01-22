@@ -325,6 +325,28 @@ async function createManifestFrame(id: string, manifestMedias: any[], title: str
   return manifestToCreate;
 }
 
+function setManifestTitle(request: any): string {
+  request.body.title = request.body.title.trim();
+  return request.body.title;
+}
+
+function setManifestFilePath(request: any) {
+  const label = request.body.title.replaceAll(/(?:\s|\/)/g, '_');
+
+  if (request.body.path)
+    request.body.oldPath = request.body.path;
+  request.body.path = label + ".json";
+
+  const hash = request.body.hash ? request.body.hash : generateAlphanumericSHA1Hash(
+    `${label}${Date.now().toString()}`,
+  );
+  request.body.hash = hash;
+}
+
+function setManifestId(request: any) {
+  return `${process.env.CADDY_URL}/${request.body.hash}/${request.body.path}/`;
+}
+
 @Injectable()
 export class MediaInterceptor implements NestInterceptor {
   async intercept(
@@ -332,30 +354,11 @@ export class MediaInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
-    const label = serializeToValidUrl(request.body.title);
-    const hash = generateAlphanumericSHA1Hash(
-      `${label}${Date.now().toString()}`,
-    );
-    const id = `${process.env.CADDY_URL}/${hash}/${label}.json/`;
-    const { manifestMedias, title, manifestThumbnail } = request.body;
 
-    const manifestToCreate = await createManifestFrame(id, manifestMedias, title, manifestThumbnail);
+    setManifestTitle(request);
+    setManifestFilePath(request);
+    const id = setManifestId(request);
 
-    request.body.processedManifest = manifestToCreate;
-    request.body.hash = hash;
-
-    return next.handle();
-  }
-}
-
-@Injectable()
-export class UpdateProcessedManifestInterceptor implements NestInterceptor {
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<any>> {
-    const request = context.switchToHttp().getRequest();
-    const id = request.body.jsonID;
     const { manifestMedias, title, thumbnailUrl } = request.body;
 
     const manifestToCreate = await createManifestFrame(id, manifestMedias, title, thumbnailUrl);

@@ -234,7 +234,7 @@ export const AllManifests = ({
         manifestMedias: manifestCanvases,
         title: manifestTitle,
         idCreator: user.id,
-        manifestThumbnail: manifestThumbnail,
+        thumbnailUrl: manifestThumbnail,
       });
       fetchManifestForUser();
       setCreateManifestIsOpen(false);

@@ -7,7 +7,7 @@ export type Manifest = {
   hash: string;
   id: number;
   idCreator: number;
-  json?: any;
+  json?: ManifestJSON;
   title: string;
   origin: manifestOrigin;
   path: string;
@@ -50,7 +50,7 @@ export type manifestCreationDto = {
   idCreator: number;
   manifestMedias: ManifestCanvases[];
   title: string;
-  manifestThumbnail: string;
+  thumbnailUrl: string;
 };
 export type MediaItem = {
   title: string;
