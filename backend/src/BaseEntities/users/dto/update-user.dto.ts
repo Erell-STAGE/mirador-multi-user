@@ -7,7 +7,7 @@ import { PASSWORD_MINIMUM_LENGTH } from 'src/auth/utils';
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   password?: string;
 
-  @Matches(new RegExp("^.{0}$|^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^\w\d\s:])(.){" + PASSWORD_MINIMUM_LENGTH + ",}$"))
+  @Matches(new RegExp("^.{0}$|^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[^\w\d\s:]).{" + PASSWORD_MINIMUM_LENGTH + ",}$"))
   newPassword?: string;
   confirmPassword?: string;
   resetToken?: string;
