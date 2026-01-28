@@ -63,6 +63,17 @@ export const ProfileUpdateForm = () => {
     await updateUserMutation(data, {
       onSuccess: () => {
         toast.success(t('userSuccessfullyUpdated'));
+        setFormValues({
+          name: user.data!.name,
+          mail: user.data!.mail,
+          newPassword: ''
+        });
+        reset({
+          ...formValues,
+          password: '',
+          confirmPassword: '',
+          newPassword: ''
+        });
       },
       onError: (error) => {
         toast.error(t('toastErrorUpdateUser') + ' ' + error.message);
