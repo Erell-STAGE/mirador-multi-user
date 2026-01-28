@@ -11,14 +11,14 @@ export const Register = () => {
     <Layout
       title={t("accountCreationTitle")}
       rightButton={
-        <Grid>
+        < Grid >
           <NavLink to="/auth/login">
             <Typography variant="button">{t("login")}</Typography>
           </NavLink>
-        </Grid>
+        </Grid >
       }
     >
       <RegisterForm />
-    </Layout>
+    </Layout >
   );
 };

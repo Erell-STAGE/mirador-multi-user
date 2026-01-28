@@ -13,3 +13,5 @@ frontend/customAssets/*
 *Dockerfile.old
 traefik.yml
 *.tar
+app.log
+logs/

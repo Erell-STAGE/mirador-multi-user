@@ -38,15 +38,14 @@ const loadLanguage = async (lng: string): Promise<void> => {
     }
   }
 
-  const availableLocales = ["en", "fr"];
-  const localeToSet = availableLocales.includes(lng) ? lng : "en";
+  const localeToSet = getAvailableLanguage(lng);
 
   dayjs.locale(localeToSet);
   console.log(`✅ Day.js locale set to: ${dayjs.locale()}`);
 
-  await i18n.changeLanguage(lng);
+  await i18n.changeLanguage(localeToSet);
 
-  updateProjetTermsLang(lng);
+  updateProjetTermsLang(localeToSet);
 };
 
 const detectedLng =
@@ -59,6 +58,14 @@ loadLanguage(detectedLng);
 export enum availableLanguages {
   en = "English",
   fr = "Français"
+}
+
+export function getAvailableLanguage(lng: string) {
+  return Object.keys(availableLanguages).includes(lng) ? lng : "en";
+}
+
+export function getPreferredLanguageFromBrowser() {
+  return getAvailableLanguage(detectedLng);
 }
 
 export { loadLanguage };
