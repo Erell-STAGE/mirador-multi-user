@@ -170,9 +170,9 @@ export const UpdateUserSchema: ZodType<UpdateFormData> = z.intersection(NewOptio
   ...UserCredentials.shape,
   ...UserInformation.shape,
   password: z.string().optional(),
-})).superRefine(({ mail, newPassword }, ctx: z.RefinementCtx) => {
+})).superRefine(({ password, mail, newPassword }, ctx: z.RefinementCtx) => {
   // Required error only if the user email have been modified or if a new password is created
-  if ((mail && mail !== initialMail) || (newPassword && newPassword.length !== 0)) {
+  if (!password && ((mail && mail !== initialMail) || (newPassword && newPassword.length !== 0))) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: `requiredField`, path: ['password'] })
   }
 });
