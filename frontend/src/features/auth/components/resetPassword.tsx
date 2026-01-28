@@ -53,7 +53,7 @@ export const ResetPassword = () => {
   };
   return (
     <Layout
-      title={t("resetPassword-title")}
+      title={t("resetPasswordTitle")}
       rightButton={
         <Grid>
           <NavLink to="/auth/login">
