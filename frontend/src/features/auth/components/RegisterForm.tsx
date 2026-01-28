@@ -28,22 +28,21 @@ export const RegisterForm = () => {
   const [message, setMessage] = React.useState("");
 
   const onSubmit = async (data: RegisterCredentialsDTO) => {
-      await createUser(data, {
-        onSuccess: () => {
-          toast.success(t("accountCreated"),{duration:10000});
-          navigate("/");
-        },
-        onError: (error:any) =>
-        {
-          if(error.status === 409){
-            return setMessage(t("user_already_exists"));
-          }
-          setOpen(true);
-          setMessage(error.toString());
-
-          console.error("error creation", error);
+    await createUser(data, {
+      onSuccess: () => {
+        toast.success(t("accountCreated"), { duration: 10000 });
+        navigate("/");
+      },
+      onError: (error: any) => {
+        if (error.status === 409) {
+          return setMessage(t("userAlreadyExists"));
         }
-      });
+        setOpen(true);
+        setMessage(error.toString());
+
+        console.error("error creation", error);
+      }
+    });
   };
 
   return (
@@ -89,7 +88,7 @@ export const RegisterForm = () => {
         <Grid item>
           <FormField
             type="password"
-            placeholder={t("confirm-password")}
+            placeholder={t("confirmPassword")}
             name="confirmPassword"
             register={register}
             required={true}

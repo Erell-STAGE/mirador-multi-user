@@ -157,7 +157,7 @@ export const AllMedias = ({
       const file = event.target.files[0];
 
       if (!isValidFileForUpload(file)) {
-        toast.error(t("error_image_type"));
+        toast.error(t("errorImageType"));
         return;
       }
       if (!isFileSizeUnderLimit(file)) {
@@ -198,7 +198,7 @@ export const AllMedias = ({
   const HandleDeleteMedia = useCallback(
     async (mediaId: number) => {
       await deleteMedia(mediaId);
-     fetchMediaForUser()
+      fetchMediaForUser()
     },
     [medias],
   );
@@ -272,8 +272,8 @@ export const AllMedias = ({
       eventValue as MediaGroupRights,
     );
 
-    if(newRights.error) {
-      toast.error(t('not_allowed_to_modify_rights'))
+    if (newRights.error) {
+      toast.error(t('notAllowedToModifyRights'))
     }
   };
 
@@ -324,7 +324,7 @@ export const AllMedias = ({
     share: string | undefined,
   ) => {
     if (share) {
-      return toast.error(t("share-media-error-message"));
+      return toast.error(t("shareMediaErrorMessage"));
     } else {
       await removeMediaFromList(mediaId);
       toast.success(t("removedMediaFromList"));
