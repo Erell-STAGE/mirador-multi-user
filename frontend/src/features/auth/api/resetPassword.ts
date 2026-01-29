@@ -1,4 +1,4 @@
-export const resetPassword = async (token: string, password: string) => {
+export const resetPassword = async (token: string, password: string, confirmPassword: string) => {
   try {
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/reset-password`,
@@ -7,7 +7,7 @@ export const resetPassword = async (token: string, password: string) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token: token, password: password }),
+        body: JSON.stringify({ token: token, password: password, confirmPassword: confirmPassword }),
       },
     );
     return response.status === 200;

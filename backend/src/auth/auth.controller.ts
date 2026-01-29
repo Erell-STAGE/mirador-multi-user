@@ -16,7 +16,7 @@ import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 @ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @ApiOperation({ summary: 'Login with your credentials' })
   @HttpCode(HttpStatus.OK)
@@ -47,8 +47,8 @@ export class AuthController {
   @HttpCode(200)
   @Post('reset-password')
   async resetPassword(
-    @Body() { token, password }: { token: string; password: string },
+    @Body() { token, password, confirmPassword }: { token: string; password: string; confirmPassword: string },
   ): Promise<void> {
-    return this.authService.resetPassword(token, password);
+    return this.authService.resetPassword(token, password, confirmPassword);
   }
 }

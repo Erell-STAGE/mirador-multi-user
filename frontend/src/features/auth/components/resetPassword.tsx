@@ -34,7 +34,7 @@ export const ResetPassword = () => {
     }
     if (token) {
       try {
-        await resetPassword(token, data.newPassword);
+        await resetPassword(token, data.newPassword, data.confirmPassword);
         toast.success(t("passwordResetSuccess"));
       } catch {
         toast.error(t('passwordResetError'));

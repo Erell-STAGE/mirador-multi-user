@@ -151,7 +151,7 @@ export class AuthService {
     }
   }
 
-  async resetPassword(token: string, password: string): Promise<void> {
+  async resetPassword(token: string, password: string, confirmPassword: string): Promise<void> {
     try {
       if (password.length < PASSWORD_MINIMUM_LENGTH) {
         throw new BadRequestException(
@@ -168,11 +168,9 @@ export class AuthService {
       }
 
       if (token === user.resetToken) {
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(password, salt);
         await this.usersService.updateUser(user.id, {
-          password: user.password,
-          newPassword: hashedPassword,
+          newPassword: password,
+          confirmPassword: confirmPassword,
           resetToken: null,
         });
       } else {
