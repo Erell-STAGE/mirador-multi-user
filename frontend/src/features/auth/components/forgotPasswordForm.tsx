@@ -10,9 +10,10 @@ import { AutomatedFormTextField, CommunFieldsName, defaultFormFields } from 'com
 
 interface PropsForgotPasswordForm {
     mail?: string,
+    setOpenModal?: (open: boolean) => void;
 }
 
-const ForgotPasswordForm = ({ mail }: PropsForgotPasswordForm) => {
+const ForgotPasswordForm = ({ mail, setOpenModal }: PropsForgotPasswordForm) => {
     const { t } = useTranslation();
 
     const [email, setEmail] = useState(mail);
@@ -25,7 +26,8 @@ const ForgotPasswordForm = ({ mail }: PropsForgotPasswordForm) => {
     const onSubmit = async (data: ForgotPasswordFormData) => {
         try {
             await forgotPassword(data.mail);
-            toast.success(t("successResetPassword"));
+            toast.success(t("successResetPassword"), { duration: 3000 });
+            await setTimeout(() => { setOpenModal && setOpenModal(false) }, 3000);
         } catch (error) {
             toast.error(t('passwordResetError'));
             if (error instanceof Error) {

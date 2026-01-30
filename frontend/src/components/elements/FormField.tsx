@@ -423,7 +423,7 @@ export class AutomatedFormTextField {
               setOpenModal={setResetPasswordModal}
               width={"fit-content"}
               children={
-                <ForgotPasswordForm mail={(form as unknown as UseFormReturn<Mail>).watch(CommunFieldsName.mail)} />
+                <ForgotPasswordForm mail={(form as unknown as UseFormReturn<Mail>).watch(CommunFieldsName.mail)} setOpenModal={setResetPasswordModal} />
               }
             />}
           </>
