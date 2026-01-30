@@ -1,4 +1,4 @@
-import { Button, Grid, TextField, Typography } from "@mui/material";
+import { Button, Grid, Link, TextField, Typography } from "@mui/material";
 import storage from "../../utils/storage.ts";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { ModalButton } from "../../components/elements/ModalButton.tsx";
@@ -11,6 +11,7 @@ import { ModalConfirmDelete } from "../projects/components/ModalConfirmDelete.ts
 import { MMUModal } from "../../components/elements/modal.tsx";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "../translation/LanguageSelector.tsx";
+import i18n from "features/translation/i18n.ts";
 
 interface IUserSettingsProps {
   user: User;
@@ -74,7 +75,7 @@ export const UserSettings = ({ user }: IUserSettingsProps) => {
             />
           </Grid>
         </Grid>
-        <Typography variant="caption" className=".MuiFormHelperText-root" color={"text.secondary"} paddingLeft="8px">{t("helperTextApiToken")}</Typography>
+        <Typography variant="caption" className=".MuiFormHelperText-root" color={"text.secondary"} paddingLeft="8px">{<p>{t("helperTextApiToken") + " - " + t("moreInformationsAPI")} <Link href={`https://arvest.app/${i18n.language}/api`} target="_blank">arvest.app/{i18n.language}/api</Link> </p>}</Typography>
       </Grid>
 
       <Grid container item flexDirection="column" spacing={1}>

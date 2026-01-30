@@ -118,6 +118,7 @@
   "MMUTooltipAdmin": "Admin: Can Access / Modify / Delete ",
   "MMUTooltipEditor": "Editor: Can Access / Modify ",
   "MMUTooltipReader": "Reader: Can Access",
+  "moreInformationsAPI": "For more informations about the Arvest's API, see",
   "myManifests": "My manifests",
   "name": "Username",
   "newGroup": "New group",
