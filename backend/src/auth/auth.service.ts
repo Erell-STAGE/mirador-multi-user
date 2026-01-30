@@ -12,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { EmailServerService } from '../utils/email/email.service';
 import { ImpersonationService } from '../impersonation/impersonation.service';
 import { CustomLogger } from '../utils/Logger/CustomLogger.service';
-import { PASSWORD_MINIMUM_LENGTH } from './utils';
+import { PASSWORD_ALL_CONDITIONS_FOR_REGEX, PASSWORD_LOWERCASE_CONDITION_FOR_REGEX, PASSWORD_MINIMUM_LENGTH, PASSWORD_NUMBER_CONDITION_FOR_REGEX, PASSWORD_SPECIAL_CHAR_CONDITION_FOR_REGEX, PASSWORD_UPPERCASE_CONDITION_FOR_REGEX } from './utils';
 
 @Injectable()
 export class AuthService {
@@ -153,11 +153,20 @@ export class AuthService {
 
   async resetPassword(token: string, password: string, confirmPassword: string): Promise<void> {
     try {
-      if (password.length < PASSWORD_MINIMUM_LENGTH) {
-        throw new BadRequestException(
-          `password must be at least ${PASSWORD_MINIMUM_LENGTH} characters`,
-        );
+      if (!password.match(new RegExp(PASSWORD_ALL_CONDITIONS_FOR_REGEX))) {
+        let errorMessage = "Password must: \n";
+        if (password.length < PASSWORD_MINIMUM_LENGTH)
+          errorMessage += `- be at least ${PASSWORD_MINIMUM_LENGTH} characters\n`;
+        if (!password.match(new RegExp(PASSWORD_LOWERCASE_CONDITION_FOR_REGEX)))
+          errorMessage += `- contains at least one lowercase character\n`;
+        if (!password.match(new RegExp(PASSWORD_UPPERCASE_CONDITION_FOR_REGEX)))
+          errorMessage += `- contains at least one uppercase character\n`;
+        if (!password.match(new RegExp(PASSWORD_NUMBER_CONDITION_FOR_REGEX)))
+          errorMessage += `- contains at least one one number\n`;
+        if (!password.match(new RegExp(PASSWORD_SPECIAL_CHAR_CONDITION_FOR_REGEX)))
+          errorMessage += `- contains at least one special character\n`;
       }
+
       const decodeData = await this.decodeConfirmationToken(token);
 
       const user = await this.usersService.findOneByMail(decodeData.mail);

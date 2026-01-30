@@ -1,5 +1,6 @@
 import i18n from "features/translation/i18n";
 import { RegisterFormData, UserResponse } from "../export";
+import { t } from "i18next";
 
 
 export const register = async (
@@ -20,14 +21,22 @@ export const register = async (
         }),
       },
     );
+
+    const responseJSON = await response.json();
+
     if (!response.ok) {
       if (response.status === 409) {
-        throw new Error("a user with this email or username already exists");
+        throw new Error(t("failedToCreateUser") + "\n" + '"' + t("userAlreadyExists") + '"');
       }
-      throw new Error("Failed to create user");
+      else if (response.status === 400) {
+        throw new Error(t("failedToCreateUser") + "\n" + '"' + responseJSON.message + '"');
+      }
+      else
+        throw new Error(t("failedToCreateUser"));
     }
-    const user = await response.json();
-    return user;
+
+    return responseJSON;
+
   } catch (error) {
     throw error;
   }

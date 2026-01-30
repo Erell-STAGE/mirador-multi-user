@@ -26,7 +26,7 @@ export const RegisterForm = () => {
         if (error.status === 409) {
           toast.error(t("userAlreadyExists"));
         } else {
-          toast.error(error.message);
+          toast.error(error.message, { duration: 10000 });
         }
         console.error("error creation", error);
       }

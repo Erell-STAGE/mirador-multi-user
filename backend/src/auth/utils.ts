@@ -1,1 +1,13 @@
 export const PASSWORD_MINIMUM_LENGTH = 8;
+
+export const PASSWORD_NUMBER_CONDITION_FOR_REGEX = "(?=.*[0-9])";
+
+export const PASSWORD_UPPERCASE_CONDITION_FOR_REGEX = "(?=.*[A-Z])";
+
+export const PASSWORD_LOWERCASE_CONDITION_FOR_REGEX = "(?=.*[a-z])";
+
+export const PASSWORD_SPECIAL_CHAR_CONDITION_FOR_REGEX = "(?=.*[^\w\d\s:])";
+
+export const PASSWORD_ALL_CONDITIONS_FOR_REGEX = `^${PASSWORD_NUMBER_CONDITION_FOR_REGEX}${PASSWORD_UPPERCASE_CONDITION_FOR_REGEX}${PASSWORD_LOWERCASE_CONDITION_FOR_REGEX}${PASSWORD_SPECIAL_CHAR_CONDITION_FOR_REGEX}.{${PASSWORD_MINIMUM_LENGTH},}$`;
+
+export const PASSWORD_ALL_CONDITIONS_FOR_USER = `Password must contains at least ${PASSWORD_MINIMUM_LENGTH} characters including at least one special, one uppercase, one lowercase and a number.`
